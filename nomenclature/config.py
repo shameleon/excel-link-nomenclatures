@@ -31,8 +31,8 @@ class Configuration(object):
          Head : initial products all start with 900 """
         self.final_products_prefix = '101'
         self.initial_products_prefix = '900'
-        self.initial_products_to_be_removed = True
-        self.useful_prefixes = ['2', '4', '9']
+        self.useful_prefixes = ['2', '4']
+        # self.useful_prefixes.append('9')
 
     def setup_target_labels(self):
         """current is the Item column label
@@ -53,6 +53,7 @@ class Configuration(object):
 
     def setup_output_headers(self):
         """
+        output_headers for dataframe that is exported to excel output_levels.xls
         """
         self.output_headers = ['Nomenclature', 'N noeud poste', 'Article de tete',
                                '2','3', '4', '5', '6', '7', '8', '9', '10','11', 
@@ -60,10 +61,7 @@ class Configuration(object):
                                '20'
                                ]
 
-        self.extraction_headers = ['Article de tete', 'Article fabrique',
-                                   'Niveau de nomeclature', 'Article consomme',
-                                   'Designation article', 'Type'
-                                   ]
+        self.extraction_headers = [ ]
 
 
 """

@@ -33,11 +33,11 @@ class Nomenclature:
         # Create the DataFrame
         df = pd.DataFrame({
             'Nomenclature': [self.ids[0]] * len(article_column),
-            'noeud poste': [self.ids[1]] * len(article_column),
-            'final_product': [self.final_product] * len(article_column),
-            'article': article_column,
-            'nomenclature level': range(1, len(article_column) + 1),
-            'component': self.parents
+            'N noeud poste': [self.ids[1]] * len(article_column),
+            'Article de tete': [self.final_product] * len(article_column),
+            'Article': article_column,
+            'niveau de nomenclature': range(1, len(article_column) + 1),
+            'Composant': self.parents
             })
         return df
 
@@ -57,14 +57,19 @@ def trace_article(df:pd.DataFrame, component:str) -> list:
             components.append(prev_component)
     return components
 
-
-def instanciate_processes(df):
-    # Ensure the 'Article' column is treated as a string
-    df['Article'] = df['Article'].astype(str)
-    df['Composant'] = df['Composant'].astype(str)
-    # Select rows where 'Article' column values start with '101'
+def get_final_products(df:pd.DataFrame) -> pd.DataFrame:
+    """Select rows where 'Article' column values start with '101' """
     final_products_df = df[df['Article'].str.startswith(config.final_products_prefix)]
     final_products_df.to_csv(f'{config.data_dir}/final_products.csv', index=False)
+    return final_products_df
+
+def instanciate_processes(df):
+    """
+    Ensure the 'Article' column is treated as a string
+    """
+    df['Article'] = df['Article'].astype(str)
+    df['Composant'] = df['Composant'].astype(str)
+    final_products_df = get_final_products(df)
     processes = []
     for index, row in final_products_df.iterrows():
         process = Nomenclature(id1=row['Nomenclature'],
@@ -72,7 +77,6 @@ def instanciate_processes(df):
                                final_product=row['Article'],
                                parent=row['Composant'])
         processes.append(process)
-        # if len(process.parents) > 0:
         if row['Composant'].startswith('4'):
             is_not_last = True
             while is_not_last:
@@ -83,16 +87,11 @@ def instanciate_processes(df):
                 else :
                     is_not_last = False
     """extract linked-lists"""
-    # Define the file name
     file_name = f'{config.data_dir}/output_levels.csv'
-    # Write to CSV file
     with open(file_name, mode='w', newline='') as file:
         writer = csv.writer(file)
-        # Optionally, write the header if you know the attribute names
-        writer.writerow(config.output_headers)  # Adjust header as needed
-        # Write each instance to a row in the CSV
-        for  process in processes:
-            # Use the __repr__() method to get the comma-separated string
+        writer.writerow(config.output_headers)
+        for process in processes:
             writer.writerow(str(process).split(','))
     print(f"Data has been written to {file_name}")
     # Read the CSV file into a DataFrame
@@ -108,18 +107,28 @@ def instanciate_processes(df):
         dataframes.append(nomenclature_df)
         # Concatenate all DataFrames vertically
         result_df = pd.concat(dataframes, ignore_index=True)
-        # test
-        if process.final_product == '101917':
-            print(process)
+        # test one nomenclature
+        if process.final_product == '101013':
+            # print(process)
             print("\n")
             print(nomenclature_df)            
     # Export the DataFrame to a CSV file
-    csv_file_path = f'{config.data_dir}/results2.csv'
+    csv_file_path = f'{config.data_dir}/results3.csv'
     result_df.to_csv(csv_file_path, index=False)
     print(f"The DataFrame has been exported to {csv_file_path}")
-    second_excel_file_path = f'{config.data_dir}/results2.xlsx'
-    result_df.to_excel(second_excel_file_path, index=False)
+    results_to_excel_file_path = f'{config.data_dir}/results3.xlsx'
+    result_df.to_excel(results_to_excel_file_path, index=False)
 
+    # Merge 
+    merged_df = pd.merge(result_df,
+                         df,
+                         on=['Article', 'Composant'],
+                         how='left'
+                         )
+    # Export the DataFrame to a CSV file
+    merged_df.to_csv(f'{config.data_dir}/results_merged.csv', index=False)
+    print("The Merged DataFrame has been exported to /results_merged.csv")
+    merged_df.to_excel(f'{config.data_dir}/results_merged.xlsx', index=False)
 
 def main():
     """  """
